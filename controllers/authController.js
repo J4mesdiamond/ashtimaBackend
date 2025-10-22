@@ -6,107 +6,110 @@ import { UserModel } from '../models/User.js';
 // @route   POST /api/auth/register
 // @access  Public
 const register = async (req, res) => {
-  try {
-    const { email, password, confirmPassword } = req.body;
-
-    // Validation
-    if (!email || !password || !confirmPassword) {
-      return res.status(400).json({
+    try {
+      const { fullName, email, password, confirmPassword } = req.body;
+  
+      // Validation
+      if (!fullName || !email || !password || !confirmPassword) {
+        return res.status(400).json({
+          success: false,
+          message: 'Please provide all required fields',
+        });
+      }
+  
+      if (password !== confirmPassword) {
+        return res.status(400).json({
+          success: false,
+          message: 'Passwords do not match',
+        });
+      }
+  
+      // Check if user exists
+      const userExists = await UserModel.findOne({ email });
+      if (userExists) {
+        return res.status(400).json({
+          success: false,
+          message: 'User already exists',
+        });
+      }
+  
+      // Create user
+      const user = await UserModel.create({
+        fullName,
+        email,
+        password,
+      });
+  
+      if (user) {
+        res.status(201).json({
+          success: true,
+          message: 'User registered successfully',
+          data: {
+            _id: user._id,
+            fullName: user.fullName,
+            email: user.email,
+            token: generateToken(user._id),
+          },
+        });
+      }
+    } catch (error) {
+      res.status(500).json({
         success: false,
-        message: 'Please provide all required fields',
+        message: error.message,
       });
     }
-
-    if (password !== confirmPassword) {
-      return res.status(400).json({
-        success: false,
-        message: 'Passwords do not match',
-      });
-    }
-
-    // Check if user exists
-    const userExists = await UserModel.findOne({ email });
-    if (userExists) {
-      return res.status(400).json({
-        success: false,
-        message: 'User already exists',
-      });
-    }
-
-    // Create user
-    const user = await User.create({
-      email,
-      password,
-    });
-
-    if (user) {
-      res.status(201).json({
-        success: true,
-        message: 'User registered successfully',
-        data: {
-          _id: user._id,
-          email: user.email,
-          token: generateToken(user._id),
-        },
-      });
-    }
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
+  };
 
 // @desc    Login user
 // @route   POST /api/auth/login
 // @access  Public
 const login = async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    // Validation
-    if (!email || !password) {
-      return res.status(400).json({
+    try {
+      const { email, password } = req.body;
+  
+      // Validation
+      if (!email || !password) {
+        return res.status(400).json({
+          success: false,
+          message: 'Please provide email and password',
+        });
+      }
+  
+      // Check user exists
+      const user = await UserModel.findOne({ email });
+      if (!user) {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid credentials',
+        });
+      }
+  
+      // Check password
+      const isMatch = await user.comparePassword(password);
+      if (!isMatch) {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid credentials',
+        });
+      }
+  
+      res.status(200).json({
+        success: true,
+        message: 'Login successful',
+        data: {
+          _id: user._id,
+          fullName: user.fullName,
+          email: user.email,
+          token: generateToken(user._id),
+        },
+      });
+    } catch (error) {
+      res.status(500).json({
         success: false,
-        message: 'Please provide email and password',
+        message: error.message,
       });
     }
-
-    // Check user exists
-    const user = await UserModel.findOne({ email });
-    if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid credentials',
-      });
-    }
-
-    // Check password
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid credentials',
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      message: 'Login successful',
-      data: {
-        _id: user._id,
-        email: user.email,
-        token: generateToken(user._id),
-      },
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
+  };
 
 // @desc    Request password reset OTP
 // @route   POST /api/auth/forgot-password
@@ -192,58 +195,59 @@ const verifyOTP = async (req, res) => {
 // @route   POST /api/auth/reset-password
 // @access  Public
 const resetPassword = async (req, res) => {
-  try {
-    const { email, otp, password, confirmPassword } = req.body;
-
-    if (!email || !otp || !password || !confirmPassword) {
-      return res.status(400).json({
+    try {
+      const { email, otp, password, confirmPassword } = req.body;
+  
+      if (!email || !otp || !password || !confirmPassword) {
+        return res.status(400).json({
+          success: false,
+          message: 'Please provide all required fields',
+        });
+      }
+  
+      if (password !== confirmPassword) {
+        return res.status(400).json({
+          success: false,
+          message: 'Passwords do not match',
+        });
+      }
+  
+      const user = await UserModel.findOne({
+        email,
+        resetPasswordOTP: otp,
+        resetPasswordExpires: { $gt: Date.now() },
+      });
+  
+      if (!user) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid or expired OTP',
+        });
+      }
+  
+      // Update password
+      user.password = password;
+      user.resetPasswordOTP = null;
+      user.resetPasswordExpires = null;
+      await user.save();
+  
+      res.status(200).json({
+        success: true,
+        message: 'Password reset successfully',
+        data: {
+          _id: user._id,
+          fullName: user.fullName,
+          email: user.email,
+          token: generateToken(user._id),
+        },
+      });
+    } catch (error) {
+      res.status(500).json({
         success: false,
-        message: 'Please provide all required fields',
+        message: error.message,
       });
     }
-
-    if (password !== confirmPassword) {
-      return res.status(400).json({
-        success: false,
-        message: 'Passwords do not match',
-      });
-    }
-
-    const user = await UserModel.findOne({
-      email,
-      resetPasswordOTP: otp,
-      resetPasswordExpires: { $gt: Date.now() },
-    });
-
-    if (!user) {
-      return res.status(400).json({
-        success: false,
-        message: 'Invalid or expired OTP',
-      });
-    }
-
-    // Update password
-    user.password = password;
-    user.resetPasswordOTP = null;
-    user.resetPasswordExpires = null;
-    await user.save();
-
-    res.status(200).json({
-      success: true,
-      message: 'Password reset successfully',
-      data: {
-        _id: user._id,
-        email: user.email,
-        token: generateToken(user._id),
-      },
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
+  };
 
 // @desc    Get current user
 // @route   GET /api/auth/me
