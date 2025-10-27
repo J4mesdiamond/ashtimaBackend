@@ -1,4 +1,3 @@
-// models/History.js
 import mongoose from 'mongoose';
 
 const historySchema = new mongoose.Schema({
@@ -29,6 +28,56 @@ const historySchema = new mongoose.Schema({
       type: Number,
       default: null,
     },
+  },
+  weatherData: {
+    aqi: {
+      type: String,
+      default: 'N/A',
+    },
+    pm25: {
+      type: String,
+      default: 'N/A',
+    },
+    pm10: {
+      type: String,
+      default: 'N/A',
+    },
+    no2: { // Assuming 'air' refers to NO2 based on the provided code
+      type: String,
+      default: 'N/A',
+    },
+    ozone: {
+      type: String,
+      default: 'N/A',
+    },
+    pollen: {
+      type: String,
+      default: 'N/A',
+    },
+    temperature: {
+      type: Number,
+      default: null,
+    },
+    humidity: {
+      type: Number,
+      default: null,
+    },
+    windSpeed: {
+      type: Number,
+      default: null,
+    },
+    windDirect: {
+      type: Number,
+      default: null,
+    },
+    category: {
+      type: String,
+      default: 'N/A',
+    },
+  },
+  medicalFacilities: {
+    type: Boolean,
+    default: false,
   },
 }, {
   timestamps: true,

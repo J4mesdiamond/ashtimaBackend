@@ -1,4 +1,3 @@
-// controllers/historyController.js
 import { History } from "../models/History.js";
 
 // @desc    Get all history for a user
@@ -62,7 +61,14 @@ const getHistoryById = async (req, res) => {
 // @access  Private
 const createHistory = async (req, res) => {
   try {
-    const { location, time, date, coordinates } = req.body;
+    const {
+      location,
+      time,
+      date,
+      coordinates,
+      weatherData,
+      medicalFacilities,
+    } = req.body;
 
     if (!location || !time || !date) {
       return res.status(400).json({
@@ -77,6 +83,20 @@ const createHistory = async (req, res) => {
       time,
       date,
       coordinates,
+      weatherData: {
+        aqi: weatherData?.aqi || 'N/A',
+        pm25: weatherData?.pm25 || 'N/A',
+        pm10: weatherData?.pm10 || 'N/A',
+        no2: weatherData?.no2 || 'N/A',
+        ozone: weatherData?.ozone || 'N/A',
+        pollen: weatherData?.pollen || 'N/A',
+        temperature: weatherData?.temperature || null,
+        humidity: weatherData?.humidity || null,
+        windSpeed: weatherData?.windSpeed || null,
+        windDirect: weatherData?.windDirect || null,
+        category: weatherData?.category || 'N/A',
+      },
+      medicalFacilities: medicalFacilities || false,
     });
 
     res.status(201).json({
@@ -114,9 +134,39 @@ const updateHistory = async (req, res) => {
       });
     }
 
+    const {
+      location,
+      time,
+      date,
+      coordinates,
+      weatherData,
+      medicalFacilities,
+    } = req.body;
+
     history = await History.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      {
+        location,
+        time,
+        date,
+        coordinates,
+        weatherData: weatherData
+          ? {
+              aqi: weatherData.aqi || history.weatherData.aqi,
+              pm25: weatherData.pm25 || history.weatherData.pm25,
+              pm10: weatherData.pm10 || history.weatherData.pm10,
+              no2: weatherData.no2 || history.weatherData.no2,
+              ozone: weatherData.ozone || history.weatherData.ozone,
+              pollen: weatherData.pollen || history.weatherData.pollen,
+              temperature: weatherData.temperature || history.weatherData.temperature,
+              humidity: weatherData.humidity || history.weatherData.humidity,
+              windSpeed: weatherData.windSpeed || history.weatherData.windSpeed,
+              windDirect: weatherData.windDirect || history.weatherData.windDirect,
+              category: weatherData.category || history.weatherData.category,
+            }
+          : history.weatherData,
+        medicalFacilities: medicalFacilities !== undefined ? medicalFacilities : history.medicalFacilities,
+      },
       {
         new: true,
         runValidators: true,
