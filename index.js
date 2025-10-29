@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import { userAuthRoutes } from './routes/authRoutes.js';
 import { historyRoutes } from './routes/historyRoutes.js';
 import { tutorialRoutes } from './routes/tutorialRoutes.js';
+import { chatRoutes } from './routes/chatRoutes.js';
 
 dotenv.config();
 
@@ -28,6 +29,7 @@ mongoose.connect(process.env.MONGODB_URI , {
 app.use('/api/auth', userAuthRoutes);
 app.use('/api/history', historyRoutes);
 app.use('/api/tutorials', tutorialRoutes);
+app.use('/api/chat', chatRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
