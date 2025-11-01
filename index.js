@@ -7,6 +7,7 @@ import { userAuthRoutes } from './routes/authRoutes.js';
 import { historyRoutes } from './routes/historyRoutes.js';
 import { tutorialRoutes } from './routes/tutorialRoutes.js';
 import { chatRoutes } from './routes/chatRoutes.js';
+import { monitoringRoutes } from './routes/monitoringRoutes.js';
 
 dotenv.config();
 
@@ -30,6 +31,7 @@ app.use('/api/auth', userAuthRoutes);
 app.use('/api/history', historyRoutes);
 app.use('/api/tutorials', tutorialRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/monitoring', monitoringRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
