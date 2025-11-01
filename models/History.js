@@ -54,6 +54,19 @@ const historySchema = new mongoose.Schema({
       type: String,
       default: 'N/A',
     },
+    // NEW: Detailed pollen counts
+    grass_pollen: {
+      type: Number,
+      default: null,
+    },
+    tree_pollen: {
+      type: Number,
+      default: null,
+    },
+    weed_pollen: {
+      type: Number,
+      default: null,
+    },
     temperature: {
       type: Number,
       default: null,
